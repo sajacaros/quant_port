@@ -1,0 +1,159 @@
+pip install pymysql
+pip install cryptography
+pip install sqlalchemy
+pip install --force-reinstall 'sqlalchemy<2.0.0'
+
+SHOW GRANTS FOR 'quantist'@'%';
+ 
+CREATE USER 'quantist'@'localhost' IDENTIFIED BY 'quant!*#';
+GRANT ALL PRIVILEGES ON *.* TO 'quantist'@'localhost';
+FLUSH PRIVILEGES;
+
+create database shop;
+use shop;
+create table goods
+(
+goods_id char(4) not null,
+goods_name varchar(100) not null,
+goods_classify varchar(32) not null,
+sell_price integer,
+buy_price integer,
+register_date date,
+primary key (goods_id)
+);
+insert into goods values ('0001', '티셔츠', '의류', 1000, 500, '2020-09-20');
+insert into goods values ('0002', '펀칭기', '사무용품', 500, 320, '2020-09-11');
+insert into goods values ('0003', '와이셔츠', '의류', 4000, 2800, NULL);
+insert into goods values ('0004', '식칼', '주방용품', 3000, 2800, '2020-09-20');
+insert into goods values ('0005', '압력솥', '주방용품', 6800, 5000, '2020-01-15');
+insert into goods values ('0006', '포크', '주방용품', 500, NULL, '2020-09-20');
+insert into goods values ('0007', '도마', '주방용품', 880, 790, '2020-04-28');
+insert into goods values ('0008', '볼펜', '사무용품', 100, NULL, '2020-11-11');
+
+select goods_id as id, goods_name as name, buy_price as price from goods;
+
+select distinct goods_classify from goods;
+
+select goods_name, goods_classify from goods where goods_classify = '의류';
+select * from goods where goods_classify = '의류';
+
+select *, sell_price-buy_price as profit 
+	from goods 
+    where sell_price-buy_price >= 500;
+
+select goods_name, goods_classify, register_date 
+	from goods 
+    where register_date < '2020-09-27';
+
+select goods_name, goods_classify, sell_price 
+	from goods 
+    where goods_classify='주방용품' and sell_price >= 3000;
+    
+select count(*) from goods;
+
+select sum(sell_price), sum(buy_price) from goods;
+
+select avg(sell_price) from goods;
+
+select count(distinct goods_classify) as count from goods;
+
+select goods_classify, count(*) from goods group by goods_classify;
+
+select goods_classify, avg(sell_price)
+	from goods
+    group by goods_classify
+    having avg(sell_price) >= 2500;
+    
+select * from goods order by sell_price;
+select * from goods order by sell_price asc;
+select * from goods order by sell_price desc;
+
+create view GoodSum (goods_classify, cnt_goods) 
+	as select goods_classify, count(*)
+		from goods
+        group by goods_classify;
+select * from GoodSum;
+drop view GoodSum;
+
+select goods_classify, cnt_goods
+	from (
+		select goods_classify, count(*) as cnt_goods
+		from goods
+        group by goods_classify
+    ) as GoodsSum;
+    
+select * from goods where sell_price > (select avg(sell_price) from goods);
+
+CREATE TABLE Goods2
+(goods_id CHAR(4) NOT NULL,
+ goods_name VARCHAR(100) NOT NULL,
+ goods_classify VARCHAR(32) NOT NULL,
+ sell_price INTEGER,
+ buy_price INTEGER,
+ register_date DATE,
+ PRIMARY KEY (goods_id));
+
+insert into Goods2 values ('0001', '티셔츠' ,'의류', 1000, 500, '2020-09-20');
+insert into Goods2 values ('0002', '펀칭기', '사무용품', 500, 320, '2020-09-11');
+insert into Goods2 values ('0003', '와이셔츠', '의류', 4000, 2800, NULL);
+insert into Goods2 values ('0009', '장갑', '의류', 800, 500, NULL);
+insert into Goods2 values ('0010', '주전자', '주방용품', 2000, 1700, '2020-09-20');
+
+CREATE TABLE StoreGoods
+(store_id CHAR(4) NOT NULL,
+ store_name VARCHAR(200) NOT NULL,
+ goods_id CHAR(4) NOT NULL,
+ num INTEGER NOT NULL,
+ PRIMARY KEY (store_id, goods_id));
+
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000A', '서울',	'0001',	30);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000A', '서울',	'0002',	50);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000A', '서울',	'0003',	15);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000B', '대전',	'0002',	30);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000B',' 대전',	'0003',	120);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000B', '대전',	'0004',	20);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000B', '대전',	'0006',	10);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000B', '대전',	'0007',	40);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000C', '부산',	'0003',	20);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000C', '부산',	'0004',	50);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000C', '부산',	'0006',	90);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000C', '부산',	'0007',	70);
+insert into StoreGoods (store_id, store_name, goods_id, num) values ('000D', '대구',	'0001',	100);
+
+select * from storegoods;
+
+select store.store_id, store.store_name, store.goods_id,
+	goods.goods_name, goods.sell_price
+from StoreGoods as store 
+inner join Goods as goods
+	on store.goods_id = goods.goods_id;
+    
+select store.store_id, store.store_name, goods.goods_id,
+	goods.goods_name, goods.sell_price
+from StoreGoods as store 
+right outer join Goods as goods
+	on store.goods_id = goods.goods_id;
+    
+select store.store_id, store.store_name, goods.goods_id,
+	goods.goods_name, goods.sell_price
+from StoreGoods as store 
+left outer join Goods as goods
+	on store.goods_id = goods.goods_id;
+    
+select goods_name, goods_classify, sell_price,
+	rank() over (partition by goods_classify order by sell_price) as ranking
+from Goods;
+
+select goods_name, goods_classify, sell_price,
+	rank () over (order by sell_price) as ranking
+from Goods; 
+
+select goods_name, goods_classify, sell_price,
+	rank() over (order by sell_price) as ranking,
+    dense_rank() over (order by sell_price) as dens_ranking,
+    row_number() over (order by sell_price) as row_ranking
+from Goods;
+
+select goods_id, goods_classify, goods_name, sell_price,
+	avg(sell_price) over(order by goods_id rows 2 preceding) as moving_avg
+from Goods;
