@@ -13,3 +13,4 @@ save_data.*
 update/
 data/
 *.key
+model.xlsx
