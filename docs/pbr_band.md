@@ -39,7 +39,7 @@ inc = 0.2
 loop = 6
 
 for i in range(loop):
-  kospi_bind['PBRx'+str(base+inc*i)] = kospi_bind['BPS'] * (base+inc*i) 
+  kospi_bind['PBRx'+str(round(base+inc*i, 1))] = kospi_bind['BPS'] * round(base+inc*i, 1) 
 
 kospi_bind.loc[:, (kospi_bind.columns != 'PBR') & (kospi_bind.columns != 'BPS')].plot()
 
