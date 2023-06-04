@@ -4,6 +4,8 @@
 * 현재 2004-01 ~ 2023-04 다운로드
 * https://kosis.kr/statHtml/statHtml.do?orgId=343&tblId=DT_343_2010_S0034
 ```
+import yfinance as yf
+import matplotlib.pyplot as plt
 import pandas as pd
 
 kospi_pbr = pd.read_csv("data/kospi_PBR.csv", encoding="cp949").T[1:]
