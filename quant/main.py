@@ -42,5 +42,4 @@ if __name__ == '__main__':
     print('\n--- factor update ---')
     fs_q = repository.get_fs_q()
     factors = factor.calculate(ticker_list, fs_q)
-    print(factors)
     repository.save_factor(factors)
