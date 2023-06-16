@@ -1,44 +1,11 @@
 # 패키지 불러오기
-import pymysql
-from sqlalchemy import create_engine
 import pandas as pd
 import requests as rq
 from bs4 import BeautifulSoup
 import re
-from tqdm import tqdm
-import time
-
-# DB 연결
-engine = create_engine('mysql+pymysql://quantist:quant!*#@127.0.0.1:3306/stock_db')
-con = pymysql.connect(user='quantist',
-                      passwd='quant!*#',
-                      host='127.0.0.1',
-                      db='stock_db',
-                      charset='utf8')
-mycursor = con.cursor()
-
-# 티커리스트 불러오기
-ticker_list = pd.read_sql("""
-select * from kor_ticker
-where 기준일 = (select max(기준일) from kor_ticker)
-	and 종목구분 = '보통주';
-""", con=engine)
-
-# DB 저장 쿼리
-query = """
-    insert into kor_fs (계정, 기준일, 값, 종목코드, 공시구분)
-    values (%s,%s,%s,%s,%s) as new
-    on duplicate key update
-    값=new.값
-"""
-
-# 오류 발생시 저장할 리스트 생성
-error_list = []
-
 
 # 재무제표 클렌징 함수
 def clean_fs(df, ticker, frequency):
-
     df = df[~df.loc[:, ~df.columns.isin(['계정'])].isna().all(axis=1)]
     df = df.drop_duplicates(['계정'], keep='first')
     df = pd.melt(df, id_vars='계정', var_name='기준일', value_name='값')
@@ -51,16 +18,8 @@ def clean_fs(df, ticker, frequency):
 
     return df
 
-
-# for loop
-for i in tqdm(range(0, len(ticker_list))):
-
-    # 티커 선택
-    ticker = ticker_list['종목코드'][i]
-
-    # 오류 발생 시 이를 무시하고 다음 루프로 진행
+def get_fs(ticker):
     try:
-
         # url 생성
         url = f'http://comp.fnguide.com/SVO2/ASP/SVD_Finance.asp?pGB=1&gicode=A{ticker}'
 
@@ -101,20 +60,7 @@ for i in tqdm(range(0, len(ticker_list))):
         # 두개 합치기
         data_fs_bind = pd.concat([data_fs_y_clean, data_fs_q_clean])
 
-        # 재무제표 데이터를 DB에 저장
-        args = data_fs_bind.values.tolist()
-        mycursor.executemany(query, args)
-        con.commit()
-
     except:
-
         # 오류 발생시 해당 종목명을 저장하고 다음 루프로 이동
         print(ticker)
-        error_list.append(ticker)
-
-    # 타임슬립 적용
-    time.sleep(2)
-
-# DB 연결 종료
-engine.dispose()
-con.close()
+    return data_fs_bind
