@@ -46,3 +46,6 @@ ratio = estrangement_ratio(kospi[['Close']], 20)
 estrangement_plot(ratio.loc['2019':], 90)
 
 
+kosdaq = yf.download('^KQ11', start="2000-01-01")
+ratio = estrangement_ratio(kosdaq[['Close']], 20)
+estrangement_plot(ratio.loc['2019':], 90)
